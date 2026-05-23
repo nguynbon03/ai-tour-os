@@ -1,7 +1,6 @@
 import { Router } from "express";
 import { z } from "zod";
 import { prisma } from "../lib/prisma";
-import { AppError } from "../middleware/errorHandler";
 
 const router = Router();
 

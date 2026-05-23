@@ -35,6 +35,9 @@ app.use(limiter);
 app.get("/health", (_req: Request, res: Response) => {
   res.json({ status: "ok", env: env.NODE_ENV, time: new Date().toISOString() });
 });
+app.get("/api/health", (_req: Request, res: Response) => {
+  res.json({ status: "ok", service: "ai-tour-backend" });
+});
 
 app.use("/api/auth", authRoutes);
 app.use("/api/customers", customerRoutes);

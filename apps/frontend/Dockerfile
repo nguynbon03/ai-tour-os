@@ -22,6 +22,7 @@ RUN adduser --system --uid 1001 nextjs
 COPY --from=builder /app/apps/frontend/public ./public
 COPY --from=builder --chown=nextjs:nodejs /app/apps/frontend/.next/standalone ./
 COPY --from=builder --chown=nextjs:nodejs /app/apps/frontend/.next/static ./.next/static
+COPY --from=builder /app/node_modules ./node_modules
 USER nextjs
 EXPOSE 3000
 ENV PORT=3000

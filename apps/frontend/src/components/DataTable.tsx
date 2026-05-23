@@ -14,7 +14,7 @@ interface DataTableProps<T> {
   onRowClick?: (row: T) => void;
 }
 
-export function DataTable<T extends Record<string, unknown>>({ columns, data, onRowClick }: DataTableProps<T>) {
+export function DataTable<T extends Record<string, any>>({ columns, data, onRowClick }: DataTableProps<T>) {
   return (
     <div className="overflow-x-auto rounded-lg border border-gray-700">
       <table className="w-full text-sm text-left">

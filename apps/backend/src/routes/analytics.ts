@@ -72,8 +72,8 @@ router.get("/dashboard", verifyToken, async (req, res, next) => {
         totalTours,
         activeTours,
         todayMessages,
-        bookingsByStatus: bookingsByStatus.map((s) => ({ status: s.status, count: s._count.status })),
-        customersByStatus: customersByStatus.map((s) => ({ status: s.status, count: s._count.status })),
+        bookingsByStatus: bookingsByStatus.map((s: {status: string, _count: {status: number}}) => ({ status: s.status, count: s._count.status })),
+        customersByStatus: customersByStatus.map((s: {status: string, _count: {status: number}}) => ({ status: s.status, count: s._count.status })),
       },
     });
   } catch (err) {
