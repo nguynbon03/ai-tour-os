@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { LayoutDashboard, MapPin, CalendarCheck, Users, BarChart3, Settings, LogOut } from "lucide-react";
+import { LayoutDashboard, MapPin, CalendarCheck, Users, BarChart3, Settings, LogOut, MessageCircle } from "lucide-react";
 import { useAuth } from "@/lib/auth";
 import clsx from "clsx";
 
@@ -11,6 +11,7 @@ const navItems = [
   { href: "/tours", label: "Tour", icon: <MapPin size={18} /> },
   { href: "/bookings", label: "Booking", icon: <CalendarCheck size={18} /> },
   { href: "/customers", label: "Khách hàng", icon: <Users size={18} /> },
+  { href: "/zalo", label: "Zalo Chat", icon: <MessageCircle size={18} /> },
   { href: "/analytics", label: "Analytics", icon: <BarChart3 size={18} /> },
   { href: "/settings", label: "Cài đặt", icon: <Settings size={18} /> },
 ];
