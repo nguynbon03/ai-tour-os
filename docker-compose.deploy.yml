@@ -1,5 +1,3 @@
-version: "3.8"
-
 services:
   backend:
     build:
@@ -8,14 +6,12 @@ services:
     container_name: ai-tour-backend
     restart: unless-stopped
     env_file: .env
-    ports:
-      - "127.0.0.1:4000:4000"
     networks:
       - coolify
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.ai-tour-backend.rule=Host(`api-tour-ai.overpowers.agency`)"
-      - "traefik.http.routers.ai-tour-backend.entrypoints=websecure"
+      - "traefik.http.routers.ai-tour-backend.entrypoints=https"
       - "traefik.http.routers.ai-tour-backend.tls=true"
       - "traefik.http.routers.ai-tour-backend.tls.certresolver=letsencrypt"
       - "traefik.http.services.ai-tour-backend.loadbalancer.server.port=4000"
@@ -29,8 +25,9 @@ services:
     container_name: ai-tour-frontend
     restart: unless-stopped
     env_file: .env
-    ports:
-      - "127.0.0.1:3000:3000"
+    environment:
+      - PORT=3000
+      - HOSTNAME=0.0.0.0
     depends_on:
       - backend
     networks:
@@ -38,7 +35,7 @@ services:
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.ai-tour-frontend.rule=Host(`tour-ai.overpowers.agency`)"
-      - "traefik.http.routers.ai-tour-frontend.entrypoints=websecure"
+      - "traefik.http.routers.ai-tour-frontend.entrypoints=https"
       - "traefik.http.routers.ai-tour-frontend.tls=true"
       - "traefik.http.routers.ai-tour-frontend.tls.certresolver=letsencrypt"
       - "traefik.http.services.ai-tour-frontend.loadbalancer.server.port=3000"
