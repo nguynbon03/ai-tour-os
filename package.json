@@ -1,0 +1,16 @@
+{
+  "name": "ai-tour-os",
+  "private": true,
+  "workspaces": ["packages/*", "apps/*"],
+  "scripts": {
+    "dev": "concurrently \"npm run dev -w apps/backend\" \"npm run dev -w apps/frontend\"",
+    "build": "npm run build -w apps/backend && npm run build -w apps/frontend",
+    "db:push": "npm run db:push -w packages/prisma",
+    "db:generate": "npm run db:generate -w packages/prisma",
+    "db:seed": "npm run db:seed -w packages/prisma"
+  },
+  "devDependencies": {
+    "concurrently": "^8.2.2",
+    "typescript": "^5.4.5"
+  }
+}
