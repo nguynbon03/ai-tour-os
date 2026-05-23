@@ -17,6 +17,7 @@ RUN npm run build -w apps/frontend
 FROM node:20-alpine AS runner
 WORKDIR /app
 ENV NODE_ENV=production
+RUN apk add --no-cache curl
 RUN addgroup --system --gid 1001 nodejs
 RUN adduser --system --uid 1001 nextjs
 COPY --from=builder /app/apps/frontend/public ./public
@@ -27,5 +28,5 @@ USER nextjs
 EXPOSE 3000
 ENV PORT=3000
 ENV HOSTNAME="0.0.0.0"
-HEALTHCHECK --interval=10s --timeout=5s --retries=5 CMD wget --spider -q http://localhost:3000/api/health || exit 1
+HEALTHCHECK --interval=10s --timeout=5s --retries=5 CMD curl -fsS http://localhost:3000/api/health || exit 1
 CMD ["node", "server.js"]

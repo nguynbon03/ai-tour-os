@@ -17,6 +17,9 @@ services:
       - "traefik.http.services.ai-tour-backend.loadbalancer.server.port=4000"
       - "traefik.http.middlewares.cors.headers.accesscontrolalloworiginlist=*"
       - "traefik.http.routers.ai-tour-backend.middlewares=cors"
+      - "traefik.http.routers.ai-tour-backend-http.rule=Host(`api-tour-ai.overpowers.agency`)"
+      - "traefik.http.routers.ai-tour-backend-http.entrypoints=http"
+      - "traefik.http.routers.ai-tour-backend-http.middlewares=redirect-to-https@file"
 
   frontend:
     build:
@@ -39,6 +42,9 @@ services:
       - "traefik.http.routers.ai-tour-frontend.tls=true"
       - "traefik.http.routers.ai-tour-frontend.tls.certresolver=letsencrypt"
       - "traefik.http.services.ai-tour-frontend.loadbalancer.server.port=3000"
+      - "traefik.http.routers.ai-tour-frontend-http.rule=Host(`tour-ai.overpowers.agency`)"
+      - "traefik.http.routers.ai-tour-frontend-http.entrypoints=http"
+      - "traefik.http.routers.ai-tour-frontend-http.middlewares=redirect-to-https@file"
 
 networks:
   coolify:
