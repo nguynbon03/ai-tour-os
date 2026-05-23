@@ -1,26 +1,30 @@
-# Multi-stage build for Next.js frontend
 FROM node:20-alpine AS deps
 RUN apk add --no-cache libc6-compat
 WORKDIR /app
-COPY apps/frontend/package.json package-lock.json* ./
-RUN npm ci
+COPY package.json ./
+COPY apps/frontend/package.json ./apps/frontend/
+RUN npm install -w apps/frontend --include-workspace-root
 
 FROM node:20-alpine AS builder
 WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
-COPY apps/frontend/ ./
-RUN npm run build
+COPY apps/frontend/ ./apps/frontend/
+COPY packages/prisma/ ./packages/prisma/
+COPY package.json ./
+ENV NEXT_TELEMETRY_DISABLED=1
+RUN npm run build -w apps/frontend
 
 FROM node:20-alpine AS runner
 WORKDIR /app
-ENV NODE_ENV production
+ENV NODE_ENV=production
 RUN addgroup --system --gid 1001 nodejs
 RUN adduser --system --uid 1001 nextjs
-COPY --from=builder /app/public ./public
-COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
-COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
+COPY --from=builder /app/apps/frontend/public ./public
+COPY --from=builder --chown=nextjs:nodejs /app/apps/frontend/.next/standalone ./
+COPY --from=builder --chown=nextjs:nodejs /app/apps/frontend/.next/static ./.next/static
 USER nextjs
 EXPOSE 3000
-ENV PORT 3000
-ENV HOSTNAME "0.0.0.0"
+ENV PORT=3000
+ENV HOSTNAME="0.0.0.0"
+HEALTHCHECK --interval=10s --timeout=5s --retries=5 CMD wget --spider -q http://localhost:3000/api/health || exit 1
 CMD ["node", "server.js"]
