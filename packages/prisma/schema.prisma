@@ -1,0 +1,308 @@
+generator client {
+  provider = "prisma-client-js"
+  output   = "../node_modules/.prisma/client"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  name      String?
+  role      Role     @default(ADMIN)
+  password  String?
+  avatar    String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  actionLogs ActionLog[]
+}
+
+enum Role {
+  ADMIN
+  STAFF
+}
+
+model Customer {
+  id          String   @id @default(cuid())
+  zaloId      String?  @unique
+  name        String
+  phone       String?
+  email       String?
+  source      Source   @default(ZALO)
+  status      CustomerStatus @default(LEAD)
+  budget      String?
+  preferences String?  // JSON: preferred destinations, travel style
+  birthday    DateTime?
+  notes       String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  messages    Message[]
+  bookings    Booking[]
+  followUps   FollowUp[]
+
+  @@index([zaloId])
+  @@index([status])
+}
+
+enum Source {
+  ZALO
+  FACEBOOK
+  WEBSITE
+  REFERRAL
+  WALKIN
+}
+
+enum CustomerStatus {
+  LEAD
+  INTERESTED
+  QUOTED
+  BOOKED
+  COMPLETED
+  CANCELLED
+}
+
+model Tour {
+  id          String   @id @default(cuid())
+  code        String   @unique
+  name        String
+  destination String
+  duration    String   // e.g. "5N4D"
+  description String   @db.Text
+  highlights  String[]
+  itinerary   String?  @db.Text
+  priceAdult  Decimal  @db.Decimal(10, 2)
+  priceChild  Decimal? @db.Decimal(10, 2)
+  currency    String   @default("VND")
+  maxGroup    Int      @default(30)
+  images      String[]
+  isActive    Boolean  @default(true)
+  category    String   @default("international")
+  tags        String[]
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  schedules   TourSchedule[]
+  bookings    Booking[]
+
+  @@index([destination])
+  @@index([category])
+  @@index([isActive])
+}
+
+model TourSchedule {
+  id        String            @id @default(cuid())
+  tourId    String
+  startDate DateTime
+  endDate   DateTime
+  price     Decimal           @db.Decimal(10, 2)
+  available Int               @default(30)
+  status    ScheduleStatus    @default(OPEN)
+  guide     String?
+  notes     String?
+  createdAt DateTime          @default(now())
+  updatedAt DateTime          @updatedAt
+
+  tour      Tour              @relation(fields: [tourId], references: [id])
+  bookings  Booking[]
+
+  @@index([tourId])
+  @@index([startDate])
+}
+
+enum ScheduleStatus {
+  OPEN
+  FULL
+  CLOSED
+  CANCELLED
+}
+
+model Booking {
+  id              String          @id @default(cuid())
+  code            String          @unique
+  customerId      String
+  scheduleId      String
+  tourId          String
+  status          BookingStatus   @default(PENDING)
+  adults          Int             @default(1)
+  children        Int             @default(0)
+  totalPrice      Decimal         @db.Decimal(10, 2)
+  deposit         Decimal?        @db.Decimal(10, 2)
+  paid            Decimal         @default(0) @db.Decimal(10, 2)
+  paymentStatus   PaymentStatus   @default(PENDING)
+  specialRequest  String?
+  passportInfo    String?         // JSON
+  emergencyContact String?
+  createdAt       DateTime        @default(now())
+  updatedAt       DateTime        @updatedAt
+
+  customer        Customer        @relation(fields: [customerId], references: [id])
+  schedule        TourSchedule    @relation(fields: [scheduleId], references: [id])
+  tour            Tour            @relation(fields: [tourId], references: [id])
+  payments        Payment[]
+  actionLogs      ActionLog[]
+
+  @@index([customerId])
+  @@index([status])
+  @@index([createdAt])
+}
+
+enum BookingStatus {
+  PENDING
+  CONFIRMED
+  DEPOSIT_PAID
+  FULLY_PAID
+  COMPLETED
+  CANCELLED
+  REFUNDED
+}
+
+enum PaymentStatus {
+  PENDING
+  PARTIAL
+  PAID
+  REFUNDED
+}
+
+model Payment {
+  id          String   @id @default(cuid())
+  bookingId   String
+  amount      Decimal  @db.Decimal(10, 2)
+  method      PaymentMethod @default(BANK)
+  reference   String?
+  status      PaymentTxStatus @default(SUCCESS)
+  paidAt      DateTime @default(now())
+  notes       String?
+
+  booking     Booking  @relation(fields: [bookingId], references: [id])
+
+  @@index([bookingId])
+}
+
+enum PaymentMethod {
+  BANK
+  CASH
+  MOMO
+  ZALOPAY
+  VNPAY
+  CARD
+}
+
+enum PaymentTxStatus {
+  SUCCESS
+  FAILED
+  PENDING
+  REFUNDED
+}
+
+model Message {
+  id          String   @id @default(cuid())
+  customerId  String
+  platform    String   @default("zalo") // zalo, facebook, web
+  direction   Direction // inbound or outbound
+  content     String   @db.Text
+  rawPayload  String?  @db.Text
+  aiHandled   Boolean  @default(false)
+  aiContext   String?  @db.Text // JSON: intent, entities, confidence
+  createdAt   DateTime @default(now())
+
+  customer    Customer @relation(fields: [customerId], references: [id])
+
+  @@index([customerId])
+  @@index([createdAt])
+}
+
+enum Direction {
+  INBOUND
+  OUTBOUND
+}
+
+model FollowUp {
+  id          String          @id @default(cuid())
+  customerId  String
+  type        FollowUpType
+  status      FollowUpStatus  @default(PENDING)
+  scheduledAt DateTime
+  sentAt      DateTime?
+  content     String?
+  notes       String?
+  createdAt   DateTime        @default(now())
+  updatedAt   DateTime        @updatedAt
+
+  customer    Customer        @relation(fields: [customerId], references: [id])
+
+  @@index([customerId])
+  @@index([scheduledAt])
+}
+
+enum FollowUpType {
+  BIRTHDAY
+  REMINDER
+  UPSELL
+  FEEDBACK
+  PAYMENT
+  CUSTOM
+}
+
+enum FollowUpStatus {
+  PENDING
+  SENT
+  CANCELLED
+}
+
+model ActionLog {
+  id          String   @id @default(cuid())
+  userId      String?  // null = system/AI
+  bookingId   String?
+  entity      String   // e.g. "booking", "customer", "tour"
+  entityId    String
+  action      String   // e.g. "create", "update", "delete", "send_message"
+  oldValue    String?  @db.Text
+  newValue    String?  @db.Text
+  ip          String?
+  userAgent   String?
+  createdAt   DateTime @default(now())
+
+  user        User?    @relation(fields: [userId], references: [id])
+  booking     Booking? @relation(fields: [bookingId], references: [id])
+
+  @@index([entity, entityId])
+  @@index([createdAt])
+}
+
+model KnowledgeBase {
+  id          String   @id @default(cuid())
+  category    String   // visa, policy, faq, tour_detail, pricing
+  question    String
+  answer      String   @db.Text
+  keywords    String[]
+  source      String?  // URL hoặc file gốc
+  isActive    Boolean  @default(true)
+  embeddingId String?  // ID trong Qdrant
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([category])
+  @@index([keywords])
+  @@index([isActive])
+}
+
+model Analytics {
+  id            String   @id @default(cuid())
+  date          DateTime @unique @default(now())
+  messagesCount Int      @default(0)
+  bookingsCount Int      @default(0)
+  revenue       Decimal  @default(0) @db.Decimal(10, 2)
+  newLeads      Int      @default(0)
+  conversions   Int      @default(0)
+  aiHandled     Int      @default(0)
+  humanHandled  Int      @default(0)
+  avgResponse   Float    @default(0)
+  createdAt     DateTime @default(now())
+
+  @@index([date])
+}
